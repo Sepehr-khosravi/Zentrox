@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Zentrox",
+    "backgroundColor" : "#000000",
+    "slug": "Zentrox",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/zentrox-logo.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/zentrox-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true ,
+      "backgroundColor" : "#000000"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/zentrox-logo.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/zentrox-logo.png"
+    }
+  }
+}
