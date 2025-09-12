@@ -1,4 +1,4 @@
-🔐 Backend Authentication Template
+🔐 Backend 
 A secure, production-ready backend template for user authentication, built with best practices in mind. Perfect for bootstrapping your next project with JWT-based auth, role management, and security features—no frontend included.
 
 ✨ Key Features
