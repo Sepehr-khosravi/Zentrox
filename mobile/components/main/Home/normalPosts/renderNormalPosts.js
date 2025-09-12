@@ -3,21 +3,23 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CommentsModal from './comments';
 
-function CommentButton({ onPress }) {
+function CommentButton({ onPress, userItem }) {
   return (
     <TouchableOpacity onPress={onPress} style={styles.action}>
       <Ionicons name="chatbubble-outline" size={18} color="#666" />
-      <Text style={styles.actionText}>Comment</Text>
+      <Text style={styles.actionText}>
+        {userItem?.comments?.length || 0}
+      </Text>
     </TouchableOpacity>
   );
 }
 
-export default function RenderPost({ item, isLiked, onLike }) {
+export default function RenderPost({ item, isLiked, onLike, from }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showComments, setShowComments] = useState(false);
 
-  const preview = item.description?.slice(0, 150) || '';
-  const full = item.description || '';
+  const preview = item?.description?.slice(0, 150) || '';
+  const full = item?.description || '';
 
   const handleTime = (createdAt) => {
     try {
@@ -37,7 +39,7 @@ export default function RenderPost({ item, isLiked, onLike }) {
       if (min > 0) return `${min}m`;
       return `${diffSec}s`;
     } catch {
-      return "Now";
+      return 'Now';
     }
   };
 
@@ -45,51 +47,72 @@ export default function RenderPost({ item, isLiked, onLike }) {
     <View style={styles.container}>
       <View style={styles.row}>
         <Image
-          source={{ uri: item.profile || 'https://dfge.de/wp-content/uploads/blank-profile-picture-973460_640.png' }}
+          source={{
+            uri:
+              item?.profile ||
+              'https://dfge.de/wp-content/uploads/blank-profile-picture-973460_640.png',
+          }}
           style={styles.avatar}
         />
+
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.username}>{item.name || 'Unknown'}</Text>
+            <Text style={styles.username}>{item?.name || 'Unknown'}</Text>
             <Text style={styles.dot}>•</Text>
-            <Text style={styles.time}>{handleTime(item.createdAt)}</Text>
+            <Text style={styles.time}>{handleTime(item?.createdAt)}</Text>
           </View>
 
-          <Text style={styles.title}>{item.title}</Text>
+          {/* Post Description */}
+          {full.length > 0 && (
+            <Text style={styles.description}>
+              {isExpanded ? full : preview}
+              {full.length > 150 && (
+                <Text
+                  onPress={() => setIsExpanded(!isExpanded)}
+                  style={styles.readMore}
+                >
+                  {isExpanded ? ' Read less' : ' Read more'}
+                </Text>
+              )}
+            </Text>
+          )}
 
-          <Text style={styles.description}>
-            {isExpanded ? full : preview}
-            {full.length > 150 && (
-              <Text onPress={() => setIsExpanded(!isExpanded)} style={styles.readMore}>
-                {isExpanded ? ' Read less' : ' Read more'}
-              </Text>
-            )}
-          </Text>
-
+          {/* Actions (Like + Comment) */}
           <View style={styles.actions}>
-            <TouchableOpacity onPress={() => onLike(item._id)} style={styles.action}>
-              <Ionicons
-                name={isLiked ? 'heart' : 'heart-outline'}
-                size={18}
-                color={isLiked ? '#E91E63' : '#666'}
-              />
-              <Text style={[
-                styles.actionText,
-                { color: isLiked ? '#E91E63' : '#666' }
-              ]}>
-                {item.like}
-              </Text>
-            </TouchableOpacity>
+            {from !== 'profile' && (
+              <TouchableOpacity
+                onPress={() => onLike(item._id)}
+                style={styles.action}
+              >
+                <Ionicons
+                  name={isLiked ? 'heart' : 'heart-outline'}
+                  size={18}
+                  color={isLiked ? '#E91E63' : '#666'}
+                />
+                <Text
+                  style={[
+                    styles.actionText,
+                    { color: isLiked ? '#E91E63' : '#666' },
+                  ]}
+                >
+                  {item?.like || 0}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <CommentButton onPress={() => setShowComments(true)} />
+            <CommentButton
+              onPress={() => setShowComments(true)}
+              userItem={item}
+            />
           </View>
         </View>
       </View>
 
+      {/* Comments Modal */}
       <CommentsModal
         visible={showComments}
         onClose={() => setShowComments(false)}
-        postId={item._id}
+        postId={item?._id}
       />
     </View>
   );
@@ -107,9 +130,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 50,
     marginRight: 12,
   },
   content: {
@@ -134,12 +157,6 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 12,
   },
-  title: {
-    color: '#ccc',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
-  },
   description: {
     color: '#ccc',
     fontSize: 14,
@@ -158,6 +175,7 @@ const styles = StyleSheet.create({
   action: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 16,
   },
   actionText: {
     marginLeft: 6,

@@ -87,7 +87,7 @@ class Auth {
             if(!req.user){
                 return res.status(401).json({message : "access denied" , data : null , error : true});
             }
-            const findUser = await userModel.findById(req.user);
+            const findUser = await userModel.findById(req.user).select("_id name email");
             if(!findUser) {
                 return res.status(404).json({message : 'user not found.' , error : true , data : null}) ;
             }

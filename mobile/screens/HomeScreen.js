@@ -3,20 +3,22 @@ import { ScrollView, RefreshControl, StyleSheet, View, Text } from 'react-native
 import Navbar from '../components/main/Home/navbar';
 import PremiumPosts from '../components/main/Home/PremiumPosts';
 import NormalPosts from '../components/main/Home/NormalPosts';
+import MyDrawer from '../Drawer';
+import InputUpload from '../components/main/Home/inputUpload';
 
-export default function HomeScreen({navigation}) {
+export default function HomeScreen({  navigation,navigationSec }) {
   const [refreshing, setRefreshing] = React.useState(false);
   const [refreshFlag, setRefreshFlag] = React.useState(false);
 
   const onRefresh = () => {
     setRefreshing(true);
-    setRefreshFlag(prev => !prev); 
+    setRefreshFlag(prev => !prev);
     setTimeout(() => setRefreshing(false), 1500);
   };
 
   return (
     <>
-      <Navbar navigation={navigation} />
+      <Navbar navigation={navigationSec} />
       <ScrollView
         style={styles.mainContainer}
         refreshControl={
@@ -28,13 +30,15 @@ export default function HomeScreen({navigation}) {
           />
         }
       >
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Premium Posts</Text>
           <PremiumPosts refreshFlag={refreshFlag} />
-        </View>
+        </View> */}
+        {/* <MyDrawer /> */}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Posts</Text>
+          <InputUpload navigation={navigationSec} />
+          {/* <Text style={styles.sectionTitle}>Posts</Text> */}
           <NormalPosts refreshFlag={refreshFlag} />
         </View>
       </ScrollView>

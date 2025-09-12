@@ -1,14 +1,14 @@
-const { postModel, userModel, commentModel , savePostModel } = require("../../models/index");
+const { postModel, userModel, commentModel, savePostModel } = require("../../models/index");
 
 class Posts {
     getAPosts = async (req, res) => {
         try {
             const { postId } = req.body;
-            const findThePosts = await postModel.findById({ _id: postId });
+            const findThePosts = await postModel.findById(postId.toString()).select("profile name email description userId _id comments likedUsers like createdAt updateAt tag isPremium").sort({ createdAt: -1 });
             if (!findThePosts) {
                 return res.status(404).json({ message: "post not found", error: true, data: {} });
             }
-            res.status(200).json({ message: "ok", data: { userName: findThePosts.name, email: findThePosts.email, userId: findThePosts.userId, profile: findThePosts.profile }, error: false });
+            res.status(200).json({ message: "ok", data: findThePosts, error: false });
         }
         catch (e) {
             console.log("Error in the getAPosts api : ", e);
@@ -17,19 +17,18 @@ class Posts {
     }
     upload = async (req, res) => {
         try {
-            const userId = req.user;
-            const user = await userModel.findById(userId);
-            const { title, description, isPremium } = req.body;
-            const check = await postModel.findOne({ title, description, userId });
+            const user = await userModel.findById(req.user);
+            const { description, isPremium } = req.body;
+            const check = await postModel.findOne({ description, userId: req.user, isPremium: isPremium });
             if (!check) {
-                if (title && description && userId) {
-                    const newPost = await postModel.create({ name: user.name, email: user.email, title: title, description: description, userId: userId, isPremium: isPremium });
+                if (description && user) {
+                    const newPost = await postModel.create({ name: user.name, email: user.email, description: description, userId: req.user, isPremium: isPremium });
                     user.posts.push(newPost._id);
                     await user.save();
-                    res.status(200).json({ message: "Your post has been uploaded", data: { title: newPost.title, description: newPost.description, _id: newPost._id, userId: userId } });
+                    res.status(201).json({ message: "Your post has been uploaded", data: newPost });
                 }
                 else {
-                    res.status(500).json({ message: "Internal server error" });
+                    res.status(401).json({ message: "invalid data" });
                 }
             }
             else {
@@ -46,8 +45,8 @@ class Posts {
             const userId = req.user;
             const user = await userModel.findById(userId);
 
-            const { title, description } = req.body;
-            const post = await postModel.findOne({ title, description, userId });
+            const { _id, description } = req.body;
+            const post = await postModel.findOne({ _id, description, userId });
             if (!post) {
                 res.status(404).json({ message: "Post not found" });
                 return;
@@ -66,7 +65,7 @@ class Posts {
         try {
             const userId = req.user;
             const { _id } = req.body;
-            const post = await postModel.findById(_id);
+            const post = await postModel.findById(_id).select("likedUsers like");
             if (!post) {
                 res.status(404).json({ message: 'Post not found', data: {} });
                 return;
@@ -76,7 +75,7 @@ class Posts {
                     post.like -= 1;
                     const newLikeUsers = post.likedUsers.filter(item => item.toString() !== userId.toString());
                     post.likedUsers = newLikeUsers;
-                    res.status(200).json({ message: "You have removed your like from this post." });
+                    res.status(200).json({ message: "You have removed your like from this post.", like: false });
                     await post.save();
                     return;
                 }
@@ -85,7 +84,7 @@ class Posts {
             post.like += 1;
             post.likedUsers.push(userId);
             await post.save();
-            res.status(200).json({ message: "You have liked this post" });
+            res.status(200).json({ message: "You have liked this post", like: true });
         }
         catch (e) {
             console.log("error in liking : ", e);
@@ -139,7 +138,7 @@ class Posts {
                 res.status(404).json({ message: "post not found.", error: true, data: null });
                 return;
             }
-            const comments = await commentModel.find({ postId: post._id }).populate("userId", "name email profile");
+            const comments = await commentModel.find({ postId: post._id }).sort({ createdAt: -1 }).populate("userId", "name email profile _id");
             if (comments.length > 0) {
                 res.status(200).json({ message: "ok", data: comments, error: false });
             }
@@ -180,7 +179,9 @@ class Posts {
                 res.status(404).json({ message: "Post not found.", data: null, error: true });
                 return;
             }
-            const newComments = await commentModel.create({ userId: req.user, postId: post._id, text: text });
+            const newComments = (await commentModel.create({ userId: req.user, postId: post._id, text: text })).populate("userId", "name email profile _id");
+            post.comments.push((await newComments)._id);
+            await post.save();
             res.status(200).json({ message: "ok", error: false, data: newComments });
         }
         catch (e) {
@@ -197,8 +198,8 @@ class Posts {
                 return res.status(401).json({ message: "post not found.", error: true });
             }
             const newPost = {
-                postId : postId ,
-                userId : req.user
+                postId: postId,
+                userId: req.user
             }
             await savePostModel.create(newPost);
             res.status(200).json({ message: 'ok', error: false });

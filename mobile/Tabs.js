@@ -5,6 +5,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import SearchScreen from "./screens/searchScreen";
 import ChatScreen from "./screens/chatScreen";
+import { TouchableOpacity } from "react-native";
 
 
 const Tab = createBottomTabNavigator();
@@ -19,12 +20,37 @@ export default function Tabs({ navigation }) {
                 tabBarInactiveTintColor: 'gray',
                 tabBarShowLabel: false,
                 tabBarStyle: {
-                    backgroundColor: '#000',
-                    borderTopWidth: 1,
-                    borderTopColor: "white",
-                    height: 60,
+
+                    backgroundColor: '#121212',
+                    borderTopWidth: 0,
+                    // borderTopColor: "#121212",
+                    height: 75,
+
+                    // width : "100%" ,
+                    // height : "100%"
                 },
-                tabBarIcon: ({ color, size, focused }) => {
+                tabBarButton: (props) => {
+                    const { children, onPress, style, ...otherProps } = props;
+
+                    return (
+                        <TouchableOpacity
+                            {...otherProps}
+                            onPress={onPress}
+                            activeOpacity={1}
+                            style={[
+                                style,
+                                {
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center'
+                                }
+                            ]}
+                        >
+                            {children}
+                        </TouchableOpacity>
+                    );
+                },
+                tabBarIcon: ({ color, size, focused, style = {} }) => {
                     let iconName;
 
                     switch (route.name) {
@@ -35,7 +61,17 @@ export default function Tabs({ navigation }) {
                             iconName = focused ? "search" : "search-outline";
                             break;
                         case 'Post':
-                            iconName = 'add-circle';
+                            style = {
+                                backgroundColor: "#1F1F1F",
+                                width: 65,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                textAlign: "center",
+                                height: 50,
+                                paddingTop: "10",
+                                borderRadius: 15
+                            }
+                            iconName = 'add';
                             size = 30;
                             color = focused ? 'white' : 'gray';
                             break;
@@ -49,15 +85,17 @@ export default function Tabs({ navigation }) {
                             iconName = 'ellipse-outline';
                     }
 
-                    return <Ionicons name={iconName} size={size} color={color} />;
+                    return <Ionicons style={style} name={iconName} size={size} color={color} />;
                 },
             })}
         >
-            <Tab.Screen name="Home" >
-                {() => <HomeScreen navigation={navigation} />}
+            <Tab.Screen options={{
+                animation: "shift"
+            }} name="Home" >
+                {() => <HomeScreen navigationSec={navigation} />}
             </Tab.Screen>
             <Tab.Screen name="Search">
-                {() => <SearchScreen  />}
+                {() => <SearchScreen />}
             </Tab.Screen>
             <Tab.Screen name="Post" component={PostsScreen} />
             <Tab.Screen name="Chats" component={ChatScreen} />

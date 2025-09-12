@@ -2,36 +2,112 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, StatusBar, Alert, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from "../config/config";
+import { api, style } from "../config/config";
 import axios from 'axios';
 
-
-const NotificationItem = ({ item, navigation  }) => {
+const NotificationItem = ({ item, navigation }) => {
   return (
-    <TouchableOpacity onPress={() => navigation.navigate("UserProfile", { email: item.from })} style={styles.card}>
-      <Image source={item.avatar ? { uri: item.avatar } : { uri: "https://dfge.de/wp-content/uploads/blank-profile-picture-973460_640.png" }} style={styles.avatar} />
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("UserProfile", { email: item.from })
+      }
+      style={[style2.card, { backgroundColor: style.backgroundNotification }]}
+    >
+      {/* Avatar */}
+      <Image
+        source={
+          item.avatar
+            ? { uri: item.avatar }
+            : { uri: "https://dfge.de/wp-content/uploads/blank-profile-picture-973460_640.png" }
+        }
+        style={[style2.avatar, { borderColor: style.borderColor }]}
+      />
 
-      <View style={styles.content}>
-        <View style={styles.textRow}>
-          <Text style={styles.username}>{item.username}</Text>
-          <Text style={styles.email}>{item.from}</Text>
-          <Text style={styles.message}> {item.message}</Text>
+      {/* Content */}
+      <View style={style2.content}>
+        <View style={style2.textRow}>
+          <Text style={[style2.username, { color: style.textColor }]}>
+            {item.username}
+          </Text>
+          <Text style={[style2.message, { color: style.textColor }]}>
+            {item.message}
+          </Text>
         </View>
-        <View style={styles.infoRow}>
+
+        {/* Info Row */}
+        <View style={style2.infoRow}>
           <Ionicons
-            name={item.type === 'like' ? 'heart-outline' : 'chatbubble-ellipses-outline'}
-            size={14}
-            color="#888"
+            name={item.type === "like" ? "heart-outline" : "chatbubble-ellipses-outline"}
+            size={16}
+            color={style.iconColor}
             style={{ marginRight: 4 }}
           />
-          <Text style={styles.time}>{item.time}</Text>
+          <Text style={[style2.time, { color: style.iconColor }]}>
+            {item.time}
+          </Text>
         </View>
       </View>
 
-      <Image source={{ uri: item.postImage }} style={styles.postImage} />
-    </TouchableOpacity>
+      {/* Post Preview */}
+      {
+        item.postImage && ( 
+        <Image source={{ uri: item.postImage ? item.postImage : "https://dfge.de/wp-content/uploads/blank-profile-picture-973460_640.png"  }} style={style2.postImage} />
+        )
+      }
+        </TouchableOpacity>
   )
 };
+const style2 = StyleSheet.create({
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    marginVertical: 6,
+    marginHorizontal: 10,
+    borderRadius: 16,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+    borderWidth: 1,
+  },
+  content: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  textRow: {
+    flexDirection: "column",
+    marginBottom: 4,
+  },
+  username: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  message: {
+    fontSize: 13,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  time: {
+    fontSize: 12,
+  },
+  postImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    marginLeft: 10,
+  },
+});
 
 export default function NotificationScreen({ navigation }) {
   let [notifications, setNotifications] = useState([]);
@@ -59,6 +135,9 @@ export default function NotificationScreen({ navigation }) {
         return;
       }
       setNotifications(response.data.data);
+      setTimeout(() => {
+        console.log(notifications);
+      }, 1000)
       setLoading(true);
     }
     catch (e) {
@@ -90,7 +169,7 @@ export default function NotificationScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: style.backgroundColor,
     paddingTop: StatusBar.currentHeight
   },
   header: {
@@ -100,7 +179,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#333',
+    borderBottomColor: style.borderColor,
   },
   headerTitle: {
     color: 'white',
@@ -112,11 +191,11 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: style.backgroundCard,
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: style.shadowColor,
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
     elevation: 4,
@@ -142,11 +221,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 15,
   },
-  email : {
-    fontSize : 13 ,
-    fontWeight :  "300",
-    color : "gray"
-  } ,
+  email: {
+    fontSize: 13,
+    fontWeight: "300",
+    color: "gray"
+  },
   message: {
     color: '#ddd',
     fontSize: 15,

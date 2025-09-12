@@ -58,12 +58,15 @@ export default function CommentsModal({ visible, onClose, postId }) {
       const notification = {
         from: getTheSelfInfo.data.info.email,
         to: getTheToInfo.data.data.email,
-        message: `${getTheSelfInfo.data.info.name} commented your post`,
+        message: `${getTheSelfInfo.data.info.name} commented your post  : \n ${newComment}`,
         type: "comment"
       };
-      await axios.post(api.sendNotification, notification, {
+      const response = await axios.post(api.sendNotification, notification, {
         headers: { 'auth-token': `Bearer ${token}` }
       });
+      if(!response || !response.data.data || response.status !== 200 || response.data.error){
+        return;
+      }
     } catch (e) {
       console.log("error in the submit Notification : ", e);
     }
@@ -84,9 +87,9 @@ export default function CommentsModal({ visible, onClose, postId }) {
       });
 
       if (response?.status === 200 && response.data.data) {
+        submitNotification();
         setNewComment('');
         fetchComments();
-        submitNotification();
       }
     } catch (e) {
       console.log("error in upload comment :", e);
@@ -141,8 +144,10 @@ export default function CommentsModal({ visible, onClose, postId }) {
             placeholder="Write a comment..."
             placeholderTextColor="#666"
             value={newComment}
+            multiline
             onChangeText={setNewComment}
             editable={!loading}
+            maxLength={500}
           />
           <TouchableOpacity onPress={submitComment} disabled={loading}>
             <Ionicons name="send" size={20} color={loading ? '#666' : '#fff'} />

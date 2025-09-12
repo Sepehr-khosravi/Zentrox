@@ -1,22 +1,26 @@
 const config = require("config");
 const jwt = require("jsonwebtoken");
-const {userModel} = require("../models");
+const { userModel } = require("../models");
 
-async function Auth(req, res, next) {
+async function Auth(req, res , next) {
     try {
         const auth = req.headers["auth-token"];
         const token = auth && auth.startsWith("Bearer ") ? auth.split(" ")[1] : null;
+
         if (!auth || !token) {
             res.status(403).json({ message: "not found", data: {}, error: "not found this page" });
             return;
         }
 
-        const decode = await jwt.verify(token, config.get("jwtKey"));
+        const decode = jwt.verify(token, config.get("jwtKey"));
         req.user = decode.userId;
         const checkUser = await userModel.findById(req.user);
-        if(!checkUser){
+
+        if (!checkUser) {
+            console.log(req.headers["name"]);
+
             console.log("there is not user in the data base");
-            return ;
+            return;
         }
         next();
     }

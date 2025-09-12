@@ -25,7 +25,6 @@ export default function Dm({ route, navigation }) {
     const [Message, setMessage] = useState("");
     const { userParam, conversationIdParam, isOnlineParam } = route.params;
     let [user, setUser] = useState(userParam);
-    console.log("this is my userParam : ", userParam);
     let [conversationId, setConversationId] = useState(conversationIdParam);
     let [isOnline, setIsOnline] = useState(isOnlineParam);
     const [online, setOnline] = useState(isOnlineParam);
@@ -213,6 +212,7 @@ export default function Dm({ route, navigation }) {
                         onChangeText={setMessage}
                         placeholder="Message"
                         placeholderTextColor="gray"
+                        multiline
                         style={styles.textInput}
                     />
                     <TouchableOpacity style={styles.sendBtn} onPress={() => sendMessage(Message)}>

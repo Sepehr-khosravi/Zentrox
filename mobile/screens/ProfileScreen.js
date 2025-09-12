@@ -7,18 +7,22 @@ import {
     ScrollView,
     Image,
     Alert,
-    ActivityIndicator ,
-    SafeAreaView  ,
-    StatusBar ,
+    ActivityIndicator,
+    SafeAreaView,
+    StatusBar,
+    FlatList
 } from 'react-native';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { api } from '../config/config';
+import { api, style } from '../config/config';
+import RenderPost from '../components/main/Home/normalPosts/renderNormalPosts';
 
 const ProfileScreen = ({ navigation }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [posts, setPosts] = useState([]);
+    const [tab, setTab] = useState("posts");
 
     const fetchUser = async () => {
         try {
@@ -43,9 +47,7 @@ const ProfileScreen = ({ navigation }) => {
             }
 
             setUser(response.data.data);
-            setTimeout(()=>{
-                console.log(user);
-            } , 1000);
+
         } catch (error) {
             console.error("Profile fetch error:", error);
             Alert.alert("Error", "Failed to load profile");
@@ -54,9 +56,38 @@ const ProfileScreen = ({ navigation }) => {
         }
     };
 
+    const getPosts = async () => {
+        try {
+            const token = await AsyncStorage.getItem("userToken");
+            if (!token) {
+                Alert.alert("Warning!", "please login or register!");
+                return;
+            }
+            const response = await axios.get(api.getSelfePost, {
+                headers: {
+                    "auth-token": `Bearer ${token}`
+                }
+            });
+            if (!response || !response.data.data || response.status !== 200 || response.data.error) {
+                Alert.alert("Hello", "please check your connection");
+                return;
+            }
+            setPosts(response.data.data);
+        }
+        catch (e) {
+            console.log("getPosts error from profileScreen : ", e);
+        }
+    };
+
     useEffect(() => {
         fetchUser();
     }, []);
+
+    useEffect(() => {
+        if (tab === "posts") {
+            getPosts();
+        }
+    }, [tab]);
 
     if (loading) {
         return (
@@ -83,91 +114,119 @@ const ProfileScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.SafeArea} >
             <StatusBar translucent backgroundColor="transparent" />
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color="white" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Profile</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Setting')}>
-                    <Feather name="settings" size={24} color="white" />
-                </TouchableOpacity>
-            </View>
+            <View style={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Profile</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Setting')}>
+                        <Feather name="settings" size={24} color="white" />
+                    </TouchableOpacity>
+                </View>
+                <ScrollView>
 
-            {/* Profile Content */}
-            <ScrollView contentContainerStyle={styles.content}>
-                {/* User Info Section */}
-                <View style={styles.profileSection}>
-                    <View style={styles.avatarContainer}>
-                        <Image
-                            source={{ uri: user.profile }}
-                            style={styles.avatar}
-                        />
-                        <TouchableOpacity style={styles.editAvatarBtn}>
-                            <MaterialIcons name="edit" size={18} color="white" />
+                    {/* Profile Content */}
+                    {/* User Info Section */}
+                    <View style={styles.profileSection}>
+                        <View style={styles.avatarContainer}>
+                            <Image
+                                source={{ uri: user.profile || "https://dfge.de/wp-content/uploads/blank-profile-picture-973460_640.png" }}
+                                style={styles.avatar}
+                            />
+                            <TouchableOpacity style={styles.editAvatarBtn}>
+                                <MaterialIcons name="edit" size={18} color="white" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.name}>{user.name || 'No Name'}</Text>
+                        <Text style={styles.username}>{user.email ? `@${user.email}` : ''}</Text>
+                        <Text style={styles.bio}>{user.bio || 'No bio available'}</Text>
+                        <View style={styles.statsContainer}>
+                            <View style={styles.statItem}>
+                                <Text style={styles.statNumber}>{user.followers || 0}</Text>
+                                <Text style={styles.statLabel}>Followers</Text>
+                            </View>
+                            <View style={styles.statItem}>
+                                <Text style={styles.statNumber}>{user.following || 0}</Text>
+                                <Text style={styles.statLabel}>Following</Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.editProfileBtn}
+                            onPress={() => navigation.navigate('EditProfile')}
+                        >
+                            <Text style={styles.editProfileBtnText}>Edit Profile</Text>
                         </TouchableOpacity>
                     </View>
+                    {/* Profile Tabs */}
+                    <View style={styles.tabsContainer}>
+                        <TouchableOpacity onPress={() => setTab("posts")} style={styles.tab}>
+                            <Ionicons
+                                name="grid"
+                                size={24}
+                                color={tab === "posts" ? style.textColor : style.iconColor}
+                            />
+                        </TouchableOpacity>
 
-                    <Text style={styles.name}>{user.name || 'No Name'}</Text>
-                    <Text style={styles.username}>{user.email ? `@${user.email}` : ''}</Text>
-                    <Text style={styles.bio}>{user.bio || 'No bio available'}</Text>
-                    <View style={styles.statsContainer}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{user.followers || 0}</Text>
-                            <Text style={styles.statLabel}>Followers</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{user.following || 0}</Text>
-                            <Text style={styles.statLabel}>Following</Text>
-                        </View>
+                        <TouchableOpacity onPress={() => setTab("saves")} style={styles.tab}>
+                            <Ionicons
+                                name="bookmark"
+                                size={24}
+                                color={tab === "saves" ? style.textColor : style.iconColor}
+                            />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => setTab("friends")} style={styles.tab}>
+                            <Ionicons
+                                name="person"
+                                size={24}
+                                color={tab === "friends" ? style.textColor : style.iconColor}
+                            />
+                        </TouchableOpacity>
                     </View>
-
-                    <TouchableOpacity
-                        style={styles.editProfileBtn}
-                        onPress={() => navigation.navigate('EditProfile')}
-                    >
-                        <Text style={styles.editProfileBtnText}>Edit Profile</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Profile Tabs */}
-                <View style={styles.tabsContainer}>
-                    <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-                        <Ionicons name="grid" size={24} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.tab}>
-                        <Ionicons name="bookmark" size={24} color="#777" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.tab}>
-                        <Ionicons name="person" size={24} color="#777" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* User Posts */}
-                <View style={styles.postsContainer}>
-                    {user.posts?.length > 0 ? (
-                        // Render posts here
-                        <Text style={styles.emptyPostsText}>Posts will appear here</Text>
-                    ) : (
-                        <Text style={styles.emptyPostsText}>No posts yet</Text>
-                    )}
-                </View>
-            </ScrollView>
-        </View>
+                    {/* User Posts */}
+                    <View style={styles.postsContainer}>
+                        {posts.length > 0 ? (
+                            <FlatList
+                                data={posts}
+                                keyExtractor={(item) => item._id}
+                                scrollEnabled={false}
+                                showsVerticalScrollIndicator={false}
+                                renderItem={({ item }) => (
+                                    <RenderPost
+                                        item={item}
+                                        isLiked={false}
+                                        onLike={() => { }}
+                                        from="profile"
+                                        ListEmptyComponent={<Text style={styles.emptyText}>No posts yet.</Text>}
+                                        style={styles.verticalList}
+                                    />
+                                )}
+                            />
+                        ) : (
+                            <Text style={styles.emptyPostsText}>No posts yet</Text>
+                        )}
+                    </View>
+                </ScrollView>
+            </View>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    SafeArea:{
+    SafeArea: {
         flex: 1,
         backgroundColor: '#121212'
-    } , 
+    },
+    verticalList: { paddingHorizontal: 10 },
+    emptyText: { color: '#aaa', textAlign: 'center', marginTop: 30 },
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        paddingTop : StatusBar.currentHeight 
+        paddingTop: StatusBar.currentHeight
     },
     loadingContainer: {
         flex: 1,
@@ -300,15 +359,8 @@ const styles = StyleSheet.create({
     tab: {
         padding: 8,
     },
-    activeTab: {
-        borderTopWidth: 2,
-        borderTopColor: 'white',
-    },
     postsContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
+        width: "100%",
     },
     emptyPostsText: {
         color: '#777',
