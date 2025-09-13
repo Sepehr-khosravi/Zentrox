@@ -53,13 +53,13 @@ npm install
 {
   "port": 5000,
   "mongoURI": "mongodb://localhost:27017/social-app",
-  "jwtSecret": "some_secret_key"
+  "jwtSecret": "some_secret_key" // it can be your secret key!!
 }
 
 
-اجرای سرور:
+اجرای سرور:(از nodemon استفاده میشه و با اضافه کردن اسکریپت : "start" : "npx nodemon ./index.js " )
 
-npm run dev
+npm start
 
 
 اجرای اپ موبایل:
